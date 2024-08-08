@@ -1,6 +1,5 @@
 <?php
 /**
- * @version $Id$
  -------------------------------------------------------------------------
   LICENSE
 
@@ -21,7 +20,7 @@
 
  @package   reports
  @authors    Nelly Mahu-Lasson, Remi Collet, Alexandre Delaunay
- @copyright Copyright (c) 2009-2021 Reports plugin team
+ @copyright Copyright (c) 2009-2022 Reports plugin team
  @license   AGPL License 3.0 or (at your option) any later version
             http://www.gnu.org/licenses/agpl-3.0-standalone.html
  @link      https://forge.glpi-project.org/projects/reports
@@ -54,9 +53,10 @@ class PluginReportsAutoReport {
 
    function __construct($title='') {
 
-      preg_match('@/plugins/(.*)/report/(.*)/@', $_SERVER['SCRIPT_NAME'], $regs);
-      $this->plug = $regs[1];
-      $this->name = $regs[2];
+
+      preg_match('@/(plugins|marketplace)/(.*)/report/(.*)/@', $_SERVER['SCRIPT_NAME'], $regs);
+      $this->plug = $regs[2];
+      $this->name = $regs[3];
       includeLocales($this->name, $this->plug);
       $this->setTitle($title);
    }
@@ -213,8 +213,15 @@ class PluginReportsAutoReport {
     * @param $options   array
    **/
    function execute($options=[]) {
-      global $DB, $CFG_GLPI, $HEADER_LOADED;
+      global $DB, $HEADER_LOADED;
 
+      
+      $field = 'plugin_reports_'.$this->name;
+      if ($this->plug != 'reports') {
+          $field = 'plugin_reports_'.$this->plug."_".$this->name;
+      }
+      Session::checkRight($field, READ);
+      
       // Require (for pager) when not called by displayCriteriasForm
       $this->manageCriteriasValues();
 
@@ -243,7 +250,7 @@ class PluginReportsAutoReport {
       $res   = $DB->query($this->sql);
       $nbtot = ($res ? $DB->numrows($res): 0);
       if ($limit) {
-         $start = (isset ($_GET["start"]) ? $_GET["start"] : 0);
+         $start = (isset ($_GET["start"]) ? intval($_GET["start"]) : 0);
          if ($start >= $nbtot) {
             $start = 0;
          }
@@ -275,14 +282,14 @@ class PluginReportsAutoReport {
          foreach ($_POST as $key => $val) {
             if (is_array($val)) {
                foreach ($val as $k => $v) {
-                  echo "<input type='hidden' name='".$key."[$k]' value='$v' >";
+                  echo Html::hidden($key.[$k], ['value' => $v]);
                   if (!empty ($param)) {
                      $param .= "&";
                   }
                   $param .= $key."[".$k."]=".urlencode($v);
                }
             } else {
-               echo "<input type='hidden' name='".$key."' value='$val' >";
+               echo Html::hidden($key, ['value' => $val]);
                if (!empty ($param)) {
                   $param .= "&";
                }
@@ -296,13 +303,6 @@ class PluginReportsAutoReport {
 
          Html::printPager($start, $nbtot, $_SERVER['PHP_SELF'], $param);
       }
-
-      $field = 'plugin_reports_'.$this->name;
-      if ($this->plug != 'reports') {
-         $field = 'plugin_reports_'.$this->plug."_".$this->name;
-      }
-
-      Session::checkRight($field, READ);
 
       if ($res && ($nbtot > 0)) {
          if (!isset ($_POST["display_type"]) || ($_POST["display_type"] == Search::HTML_OUTPUT)) {
@@ -468,7 +468,8 @@ class PluginReportsAutoReport {
          $this->closeColumn();
 
          echo "<tr class='tab_bg_2'><td colspan='4' class='center'>";
-         echo "<input type='submit' name='find' value='"._sx('button', 'Search')."' class='submit'>";
+         echo Html::submit(_sx('button', 'Search'), ['name' => 'find',
+                                                     'class' => 'btn btn-primary']);
          echo "</td></tr>";
          echo "</table></div>";
          Html::closeForm();

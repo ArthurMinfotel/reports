@@ -38,6 +38,7 @@
 *	- query executing using with criterias restriction
 * 	- result display & export (HTML, PDF, CSV, SLK)
 **/
+#[\AllowDynamicProperties]
 class PluginReportsAutoReport {
 
    private $criterias       = [];

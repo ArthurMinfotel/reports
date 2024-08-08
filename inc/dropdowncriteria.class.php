@@ -319,7 +319,7 @@ class PluginReportsDropdownCriteria extends PluginReportsAutoCriteria {
       $dbu = new DbUtils();
 
         if ($this->getParameterValue() || $this->searchzero) {
-            if ($this->multiple) {
+            if ($this->multiple && $this->getParameterValue()) {
                 return $link . " " . $this->getSqlField() . " IN (" . implode(',', $this->getParameterValue()) . ") ";
             }
             if (!$this->childrens) {

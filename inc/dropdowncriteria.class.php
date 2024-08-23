@@ -285,6 +285,7 @@ class PluginReportsDropdownCriteria extends PluginReportsAutoCriteria {
             $options['used'] = $values;
             $options['value'] = $values;
             $options['name'] .= '[]';
+            $options['width'] = '100%';
         }
 
         Dropdown::show($this->getItemType(), $options);
